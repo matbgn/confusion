@@ -23,6 +23,8 @@ export class DishdetailComponent implements OnInit {
 
   dish: Dish;
 
+  errMess: string;
+
   comment: Comment;
 
   dishIds: string[];
@@ -62,7 +64,7 @@ export class DishdetailComponent implements OnInit {
       .subscribe(dish => {
         this.dish = dish;
         this.setPrevNext(dish.id);
-      });
+      }, errmess => this.errMess = <any>errmess);
   }
 
   createForm(): void {
