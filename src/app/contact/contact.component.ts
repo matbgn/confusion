@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { Feedback, ContactType } from "../shared/feedback";
 
 import { flyInOut } from '../animations/app.animation';
+import { FeedbackService } from '../services/feedback.service';
 
 @Component({
   selector: 'app-contact',
@@ -23,6 +24,10 @@ export class ContactComponent implements OnInit {
 
   feedbackForm: FormGroup;
   feedback: Feedback;
+  feedbackcopy: Feedback;
+
+  errMess: string;
+
   contactType = ContactType;
 
   formErrors = {
@@ -53,11 +58,12 @@ export class ContactComponent implements OnInit {
     },
   };
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,
+    private feedbackservice: FeedbackService) {
     this.createForm();
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   createForm(): void {
     this.feedbackForm = this.fb.group({
@@ -71,7 +77,10 @@ export class ContactComponent implements OnInit {
     });
 
     this.feedbackForm.valueChanges
-      .subscribe(data => this.onValueChanged(data));
+      .subscribe(data => {
+        this.onValueChanged(data);
+        this.feedbackcopy = this.feedback;
+      });
 
     this.onValueChanged(); // (re)set validation messages now
 
@@ -102,6 +111,17 @@ export class ContactComponent implements OnInit {
   onSubmit() {
     this.feedback = this.feedbackForm.value;
     console.log(this.feedback);
+
+    this.feedbackcopy.push(this.feedback);
+    this.feedbackservice.submitFeedback(this.feedbackcopy)
+      .subscribe(this.feedback => {
+        this.feedback = feedback;
+        this.feedbackcopy = feedback;
+      },
+      errmess => { this.feedback = null; this.feedbackcopy = null; this.errMess = <any>errmess });
+
+      this.feedbackFormDirective.resetForm();
+
     this.feedbackForm.reset({
       firstname: '',
       lastname: '',
@@ -111,7 +131,7 @@ export class ContactComponent implements OnInit {
       contacttype: 'None',
       message: ''
     });
-    this.feedbackFormDirective.resetForm();
+    
   }
 
 }
