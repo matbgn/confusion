@@ -5,6 +5,8 @@ import { Feedback, ContactType } from "../shared/feedback";
 import { flyInOut } from '../animations/app.animation';
 import { FeedbackService } from '../services/feedback.service';
 
+import { expand } from "../animations/app.animation";
+
 @Component({
   selector: 'app-contact',
   templateUrl: './contact.component.html',
@@ -13,10 +15,11 @@ import { FeedbackService } from '../services/feedback.service';
   host: {
     '[@flyInOut]': 'true',
     'style': 'display: block;'
-    },
-    animations: [
-      flyInOut()
-    ]
+  },
+  animations: [
+    flyInOut(),
+    expand()
+  ]
 })
 export class ContactComponent implements OnInit {
 
@@ -25,6 +28,8 @@ export class ContactComponent implements OnInit {
   feedbackForm: FormGroup;
   feedback: Feedback;
   feedbackcopy: Feedback;
+  spinner: boolean = false;
+  returnedFeedback: boolean = false;
 
   errMess: string;
 
@@ -86,7 +91,7 @@ export class ContactComponent implements OnInit {
 
   }
 
-  onValueChanged(data ? : any) {
+  onValueChanged(data?: any) {
     if (!this.feedbackForm) {
       return;
     }
@@ -109,18 +114,26 @@ export class ContactComponent implements OnInit {
   }
 
   onSubmit() {
+    this.spinner = true;
     this.feedback = this.feedbackForm.value;
     console.log(this.feedback);
 
-    this.feedbackcopy.push(this.feedback);
+    this.feedbackcopy = this.feedback;
     this.feedbackservice.submitFeedback(this.feedbackcopy)
-      .subscribe(this.feedback => {
-        this.feedback = feedback;
-        this.feedbackcopy = feedback;
-      },
-      errmess => { this.feedback = null; this.feedbackcopy = null; this.errMess = <any>errmess });
+      .subscribe(feedback => {
+        this.returnedFeedback = true;
+        this.spinner = false;
 
-      this.feedbackFormDirective.resetForm();
+        this.feedback = feedback;  
+        this.feedbackcopy = feedback;    
+        setTimeout(() => {
+          this.returnedFeedback = false;          
+        }, 5000);
+        
+      },
+        errmess => { this.feedback = null; this.feedbackcopy = null; this.errMess = <any>errmess });
+
+    this.feedbackFormDirective.resetForm();
 
     this.feedbackForm.reset({
       firstname: '',
@@ -131,7 +144,7 @@ export class ContactComponent implements OnInit {
       contacttype: 'None',
       message: ''
     });
-    
+
   }
 
 }
